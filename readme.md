@@ -15,9 +15,7 @@ GET <SERVICE_ENDPOINT>/?url=https://en.wikipedia.org/wiki/Mozilla&image=.infobox
 
 > NOTE: All parameters must be URL encoded.
 
-### FAQs
-
-> How does it work?
+### How does it work?
 
 The service fetches the `url`s content, finds the given `title`, `description` and `image` elements and adds (or replaces) the relevant [OpenGraph](http://ogp.me/) metadata tags.
 
@@ -25,11 +23,11 @@ The service fetches the `url`s content, finds the given `title`, `description` a
 <meta property="og:title" content="[text content of matched `title` element]" />
 ```
 
-> Isn't the page completely broken when visited?
+### Isn't the page completely broken when visited?
 
 We redirect (client-side) straight to the original page to avoid the user seeing brokeness.
 
-> What is this for?
+### What is this for?
 
 Many apps need to visually represent links. If these links don't have certain metadata in the page, the app is unable to render anything rich. If someone wants to share a link that doesn't contain metadata they could instead share a URL to this service and transform the metadata so that it looks nicer.
 
