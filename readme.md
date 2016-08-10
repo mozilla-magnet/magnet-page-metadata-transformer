@@ -1,4 +1,4 @@
-# magnet-page-metadata-transformer
+# magnet-page-metadata-transformer ![](https://travis-ci.org/mozilla-magnet/magnet-page-metadata-transformer.svg)
 
 A service to transform HTML pages on the fly to expose better metadata.
 
