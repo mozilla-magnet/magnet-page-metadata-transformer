@@ -17,7 +17,7 @@ module.exports = function(req, res, next) {
     description
   } = req.query;
 
-  debug('request', req.query);
+  debug('request', req.url, req.query);
   if (!url) return next(new Error('`url` parameter required'));
 
   request

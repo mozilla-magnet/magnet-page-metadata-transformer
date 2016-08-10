@@ -17,7 +17,8 @@ const app = require('../app');
 const port = 3232;
 const host = `http://localhost:${port}`;
 const pages = {
-  viewSourceProfile: `${host}/view-source-profile.html`
+  viewSourceProfile: `${host}/view-source-profile.html`,
+  wikipedia: `${host}/wikipedia-article.html`
 };
 
 /**
@@ -61,24 +62,50 @@ describe('magnet-oembed-service', function() {
   });
 
   describe('title', function() {
-    beforeEach(function(done) {
-      request(app)
-        .get(`/?url=${pages.viewSourceProfile}&title=${encodeURIComponent('.section_body h1')}`)
-        .expect('Content-Type', /html/)
-        .expect(200)
-        .end((err, res) => {
-          if (err) throw err;
-          this.html = res.text;
-          done();
-        });
+    describe('replace', function() {
+      beforeEach(function(done) {
+        request(app)
+          .get(`/?url=${pages.viewSourceProfile}&title=${encodeURIComponent('.section_body h1')}`)
+          .expect('Content-Type', /html/)
+          .expect(200)
+          .end((err, res) => {
+            if (err) throw err;
+            this.html = res.text;
+            done();
+          });
+      });
+
+      it('replaces existing metadata tags', function() {
+        var $ = cheerio.load(this.html);
+        var $og = $('head meta[property="og:title"]');
+
+        assert.ok($og.length, 'tag exists');
+        assert.equal($og.attr('content'), 'Jen Simmons');
+      });
     });
 
-    it('replaces existing metadata tags', function() {
-      var $ = cheerio.load(this.html);
-      var $og = $('head meta[property="og:title"]');
+    describe('add', function() {
+      beforeEach(function(done) {
+        request(app)
+          .get(`/?url=${encodeURIComponent(pages.wikipedia)}&title=${encodeURIComponent('#firstHeading')}`)
+          .expect('Content-Type', /html/)
+          .expect(200)
+          .end((err, res) => {
+            if (err) throw err;
+            this.html = res.text;
+            done();
+          });
+      });
 
-      assert.ok($og.length, 'tag exists');
-      assert.equal($og.attr('content'), 'Jen Simmons');
+      it.only('replaces existing metadata tags', function() {
+        var $ = cheerio.load(this.html);
+        var $og = $('head meta[property="og:title"]');
+
+        console.log(`/?url=${encodeURIComponent(pages.wikipedia)}&title=${encodeURIComponent('#firstHeading')}`);
+
+        assert.ok($og.length, 'tag exists');
+        assert.equal($og.attr('content'), 'Mozilla');
+      });
     });
   });
 
