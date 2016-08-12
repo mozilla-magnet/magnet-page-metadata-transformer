@@ -9,13 +9,13 @@ const request = require('superagent');
 const cheerio = require('cheerio');
 const URL = require('url');
 
+/**
+ * Exports
+ */
+
 module.exports = function(req, res, next) {
-  var {
-    url,
-    image,
-    title,
-    description
-  } = req.query;
+  var { query } = req;
+  var { url } = query;
 
   debug('request', req.url, req.query);
   if (!url) return next(new Error('`url` parameter required'));
@@ -24,46 +24,100 @@ module.exports = function(req, res, next) {
     .get(url)
     .end((err, result) => {
       const $ = cheerio.load(result.text);
-      const $head = $('head');
-      const $image = $(image);
-      const $title = $(title);
-      const $description = $(description);
       const endUrl = result.request.url;
 
-      // image
-      if ($image.length) {
-        const src = URL.resolve(endUrl, $image.attr('src'));
-        addOrReplace($head, 'meta[property="og:image"]', $(`<meta property="og:image" content="${src}" />`));
-        addOrReplace($head, 'meta[name="twitter:image"]', $(`<meta name="twitter:image" content="${src}" />`));
-      }
+      var tags = [
+        `<meta http-equiv="refresh" content="0; ${endUrl}" />`,
+        `<meta name="magnet:url" content="${endUrl}"/>`,
+      ].concat(
+        getTitleTags($, query.title),
+        getDescriptionTags($, query.description),
+        getImageTags($, query.image, endUrl));
 
-      // title
-      if ($title.length) {
-        const replacement = $title.text().trim();
-        addOrReplace($head, 'meta[property="og:title"]', $(`<meta property="og:title" content="${replacement}" />`));
-      }
-
-      // description
-      if ($description.length) {
-        const replacement = $description
-          .first()
-          .text()
-          .trim()
-          .replace(/\s\s+/g, ' ');
-
-        addOrReplace($head, 'meta[property="og:description"]', $(`<meta property="og:description" content="${replacement}" />`));
-      }
-
-      // add clientside redirect to ensure
-      // users end up at the real page
-      addOrReplace($head, 'meta[http-equiv="refresh"]', $(`<meta http-equiv="refresh" content="0; ${endUrl}" />`));
-
-      res.send($.html());
+      debug('rendering tags', tags);
+      res.send(render(tags));
     });
 };
 
-function addOrReplace($parent, selector, $replacement) {
-  const $existing = $parent.find(selector);
-  if ($existing.length) $existing.replaceWith($replacement);
-  else $parent.append($replacement);
+/**
+ * Utils
+ */
+
+function getTitleTags($, selector) {
+  var title = getText($, selector) || getExistingTitle($);
+  if (!title) return [];
+
+  return [
+    `<title>${title}</title>`,
+    `<meta property="og:title" content="${title}"/>`,
+    `<meta name="twitter:title" content="${title}"/>`,
+  ];
+}
+
+function getExistingTitle($) {
+  return getAttr($, 'meta[property="og:title"]', 'content')
+    || getAttr($, 'meta[name="twitter:title"]', 'content')
+    || getText($, 'title');
+}
+
+function getDescriptionTags($, selector) {
+  var title = getText($, selector) || getExistingDescription($);
+  if (!title) return [];
+
+  return [
+    `<meta name="description" content="${title}"/>"`,
+    `<meta property="og:description" content="${title}"/>`,
+    `<meta name="twitter:description" content="${title}"/>`,
+  ];
+}
+
+function getExistingDescription($) {
+  return getAttr($, 'meta[property="og:description"]', 'content')
+    || getAttr($, 'meta[name="twitter:description"]', 'content')
+    || getText($, 'title');
+}
+
+function getImageTags($, image, endUrl) {
+  var src = getImageSrc($, image, endUrl) || getExistingImage($);
+  if (!src) return [];
+
+  return [
+    `<meta property="og:image" content="${src}"/>`,
+    `<meta name="twitter:image" content="${src}"/>`,
+  ];
+}
+
+function getImageSrc($, image, endUrl) {
+  if (!image || image.startsWith('http')) return image;
+  const node = $(image).eq(0);
+  const src = node.length && node.attr('src');
+  return src && URL.resolve(endUrl, src);
+}
+
+function getExistingImage($) {
+  return getAttr($, 'meta[property="og:image"]', 'content')
+    || getAttr($, 'meta[name="twitter:image"]', 'content');
+}
+
+function getAttr($, selector, attr) {
+  if (!selector) return;
+  var node = $(selector).first();
+  return node.length && node.attr(attr);
+}
+
+function getText($, selector) {
+  if (!selector) return;
+  var node = $(selector).first();
+  return node.length && node.text().trim();
+}
+
+function render(tags) {
+  return `<!DOCTYPE html>
+  <html lang="en-US" class="js-no">
+    <head>
+      <meta charset="utf-8">
+      ${tags.join('\n')}
+    </head>
+    <body></body>
+  </html>`;
 }

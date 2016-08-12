@@ -36,28 +36,58 @@ describe('magnet-oembed-service', function() {
   });
 
   describe('image', function() {
-    beforeEach(function(done) {
-      request(app)
-        .get(`/?url=${pages.viewSourceProfile}&image=${encodeURIComponent('.section_body img')}`)
-        .expect('Content-Type', /html/)
-        .expect(200)
-        .end((err, res) => {
-          if (err) throw err;
-          this.html = res.text;
-          done();
+    describe('replace', function() {
+      describe('selector', function() {
+        beforeEach(function(done) {
+          request(app)
+            .get(`/?url=${pages.viewSourceProfile}&image=${encodeURIComponent('.section_body img')}`)
+            .expect('Content-Type', /html/)
+            .expect(200)
+            .end((err, res) => {
+              if (err) throw err;
+              this.html = res.text;
+              done();
+            });
         });
-    });
 
-    it('replaces existing metadata image tags', function() {
-      var $ = cheerio.load(this.html);
-      var $og = $('head meta[property="og:image"]');
-      var $twitter = $('head meta[name="twitter:image"]');
+        it('replaces existing metadata image tags', function() {
+          var $ = cheerio.load(this.html);
+          var $og = $('head meta[property="og:image"]');
+          var $twitter = $('head meta[name="twitter:image"]');
 
-      assert.ok($og.length);
-      assert.equal($og.attr('content'), `http://localhost:${port}/assets/images/speakers/jensimmons.jpg`);
+          assert.ok($og.length);
+          assert.equal($og.attr('content'), `http://localhost:${port}/assets/images/speakers/jensimmons.jpg`);
 
-      assert.ok($twitter.length);
-      assert.equal($twitter.attr('content'), `http://localhost:${port}/assets/images/speakers/jensimmons.jpg`);
+          assert.ok($twitter.length);
+          assert.equal($twitter.attr('content'), `http://localhost:${port}/assets/images/speakers/jensimmons.jpg`);
+        });
+      });
+
+      describe('uri', function() {
+        beforeEach(function(done) {
+          request(app)
+            .get(`/?url=${pages.viewSourceProfile}&image=${encodeURIComponent('http://images.com/1')}`)
+            .expect('Content-Type', /html/)
+            .expect(200)
+            .end((err, res) => {
+              if (err) throw err;
+              this.html = res.text;
+              done();
+            });
+        });
+
+        it('replaces existing metadata image tags', function() {
+          var $ = cheerio.load(this.html);
+          var $og = $('head meta[property="og:image"]');
+          var $twitter = $('head meta[name="twitter:image"]');
+
+          assert.ok($og.length);
+          assert.equal($og.attr('content'), 'http://images.com/1');
+
+          assert.ok($twitter.length);
+          assert.equal($twitter.attr('content'), 'http://images.com/1');
+        });
+      });
     });
   });
 
@@ -97,11 +127,9 @@ describe('magnet-oembed-service', function() {
           });
       });
 
-      it.only('replaces existing metadata tags', function() {
+      it('replaces existing metadata tags', function() {
         var $ = cheerio.load(this.html);
         var $og = $('head meta[property="og:title"]');
-
-        console.log(`/?url=${encodeURIComponent(pages.wikipedia)}&title=${encodeURIComponent('#firstHeading')}`);
 
         assert.ok($og.length, 'tag exists');
         assert.equal($og.attr('content'), 'Mozilla');
