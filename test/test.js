@@ -180,4 +180,26 @@ describe('magnet-oembed-service', function() {
       assert.equal($meta.attr('content'), `0; ${pages.viewSourceProfile}`);
     });
   });
+
+  describe('magnet:url', function() {
+    beforeEach(function(done) {
+      request(app)
+        .get(`/?url=${pages.viewSourceProfile}`)
+        .expect('Content-Type', /html/)
+        .expect(200)
+        .end((err, res) => {
+          if (err) throw err;
+          this.html = res.text;
+          done();
+        });
+    });
+
+    it('includes a meta that points to original url', function() {
+      var $ = cheerio.load(this.html);
+      var $meta = $('meta[name="magnet:url"]');
+
+      assert.ok($meta.length, 'tag exists');
+      assert.equal($meta.attr('content'), `${pages.viewSourceProfile}`);
+    });
+  });
 });
