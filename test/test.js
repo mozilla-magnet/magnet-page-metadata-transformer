@@ -40,7 +40,7 @@ describe('magnet-oembed-service', function() {
       describe('selector', function() {
         beforeEach(function(done) {
           request(app)
-            .get(`/?url=${pages.viewSourceProfile}&image=${encodeURIComponent('.section_body img')}`)
+            .get(`/?url=${pages.viewSourceProfile}&image=${encodeURIComponent('${.section_body img}')}`)
             .expect('Content-Type', /html/)
             .expect(200)
             .end((err, res) => {
@@ -95,7 +95,7 @@ describe('magnet-oembed-service', function() {
     describe('replace', function() {
       beforeEach(function(done) {
         request(app)
-          .get(`/?url=${pages.viewSourceProfile}&title=${encodeURIComponent('.section_body h1')}`)
+          .get(`/?url=${pages.viewSourceProfile}&title=${encodeURIComponent('foo ${.section_body h1}')}`)
           .expect('Content-Type', /html/)
           .expect(200)
           .end((err, res) => {
@@ -110,14 +110,14 @@ describe('magnet-oembed-service', function() {
         var $og = $('head meta[property="og:title"]');
 
         assert.ok($og.length, 'tag exists');
-        assert.equal($og.attr('content'), 'Jen Simmons');
+        assert.equal($og.attr('content'), 'foo Jen Simmons');
       });
     });
 
     describe('add', function() {
       beforeEach(function(done) {
         request(app)
-          .get(`/?url=${encodeURIComponent(pages.wikipedia)}&title=${encodeURIComponent('#firstHeading')}`)
+          .get(`/?url=${encodeURIComponent(pages.wikipedia)}&title=${encodeURIComponent('${#firstHeading}')}`)
           .expect('Content-Type', /html/)
           .expect(200)
           .end((err, res) => {
@@ -140,7 +140,7 @@ describe('magnet-oembed-service', function() {
   describe('description', function() {
     beforeEach(function(done) {
       request(app)
-        .get(`/?url=${pages.viewSourceProfile}&description=${encodeURIComponent('.section_body p')}`)
+        .get(`/?url=${pages.viewSourceProfile}&description=${encodeURIComponent('${.section_body p}')}`)
         .expect('Content-Type', /html/)
         .expect(200)
         .end((err, res) => {

@@ -3,14 +3,14 @@
 A service to transform HTML pages on the fly to expose better metadata.
 
 ```
-GET <SERVICE_ENDPOINT>/?url=https://en.wikipedia.org/wiki/Mozilla&image=.infobox%20img&title=%23firstHeading
+GET <SERVICE_ENDPOINT>/?url=https://en.wikipedia.org/wiki/Mozilla&image=${.infobox img}&title=${#firstHeading}
 ```
 
 ### Parameters
 
 - `url` - The location of the page you wish to transform
-- `image` - A CSS selector to an image on that page (eg. `image=.body img`)
-- `title` - A CSS selector to an element who's text content should be used as the page title (eg. `title=.body h1`)
+- `image` - A CSS selector to an image on that page (eg. `image=${.body img}`)
+- `title` - A CSS selector to an element who's text content should be used as the page title (eg. `title=${.body h1}`)
 - `description` - A CSS selector to an element who's text content should be used as the page title
 
 > NOTE: All parameters must be URL encoded.
